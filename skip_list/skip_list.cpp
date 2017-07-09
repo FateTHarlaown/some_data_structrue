@@ -14,3 +14,9 @@ SkipList::SkipList(int maxLevel, float skipListP):MAX_LEVEL(maxLevel),
         head.forwards[i] = NULL;
     }
 }
+
+template <class KeyType, class DataType>
+bool SkipList<KeyType, DataType>::searchNode(const KeyType & key, const DataType & value)
+{
+
+}
