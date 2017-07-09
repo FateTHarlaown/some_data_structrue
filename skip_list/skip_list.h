@@ -13,9 +13,15 @@ template <class DataType, class KeyType>
 class ListNode
 {
 public:
+    ListNode(){}
+    ListNode(KeyType DefaultKey, DataType DefaultValue):key(DefaultKey),
+                                                        value(DefaultValue)
+    {
+
+    }
     DataType value;
     KeyType key;
-    vector<ListNode*> forwards;
+    vector<ListNode*> forwards;//pointers to node from different level
 };
 
 template <class DataType, class KeyType>
