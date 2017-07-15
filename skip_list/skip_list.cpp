@@ -28,7 +28,7 @@ bool SkipList<KeyType, DataType>::searchNode(const KeyType & key, DataType & val
         }
     }
     x = x->forwards[0];
-    if(x != NULL && x->key == key)
+    if(x != NULL && x->key == key)//存在该节点，修改其值
     {
         value = x->value;
         return true;
@@ -69,9 +69,6 @@ bool SkipList<KeyType, DataType>::insertNode(const KeyType &key, const DataType 
         insertPos.push_back(&head);
     }
 
-    for(int i = 0; i < level_num - nodeLevel; i++)
-        insertPos.pop_back();
-
     for(int i = 0; i <= nodeLevel; i++)
     {
         newNode->forwards[i] = insertPos[i]->forwards[i];
@@ -79,4 +76,35 @@ bool SkipList<KeyType, DataType>::insertNode(const KeyType &key, const DataType 
     }
 
     return true;
+}
+
+template <class KeyType, class DataType>
+bool SkipList<KeyType, DataType>::deleteNode(KeyType key)
+{
+    ListNode * x = &head;
+    vector<ListNode*> deletePos;
+    for(int i = level_num; i >= 0; i--)
+    {
+        while (x->forwards[i] != NULL && x->forwards[i]->key < key)//这意味着KeyType类型必须有小于运算符“<”，若没有
+        {                                                          //或者其表现与所需不符合，需要自己重载该运算符
+            x = x->forwards[i];
+        }
+        deletePos.push_back(x);
+    }
+
+    reverse(deletePos.begin(), deletePos.end());
+    x = x->forwards[0];
+    if(x != NULL && x->key == key)//存在该节点，删除掉
+    {
+        for(int i = 0; i < x->forwards.size(); i++)
+        {
+            deletePos[i]->forward[i] = x->forwards[i];
+        }
+        delete x;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
