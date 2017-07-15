@@ -7,9 +7,10 @@
 
 #include <vector>
 
+
 using namespace std;
 
-template <class DataType, class KeyType>
+template <class KeyType, class DataType>
 class ListNode
 {
 public:
@@ -24,7 +25,7 @@ public:
     vector<ListNode*> forwards;//pointers to node from different level
 };
 
-template <class DataType, class KeyType>
+template <class KeyType, class DataType>
 class SkipList
 {
 public:
@@ -33,10 +34,11 @@ public:
     bool searchNode(KeyType key, DataType & value);
     bool updateNode(KeyType key, DataType newValue);
     bool deleteNode(KeyType key);
+    int randomLevel();
 private:
     const int MAX_LEVEL;
     const float SKIP_LIST_P;
-    int level_num;
+    int level_num;//从0开始编号
     ListNode<DataType, KeyType> head;
 };
 
