@@ -4,6 +4,7 @@
 
 #include <c++/cstdlib>
 #include <algorithm>
+#include <time.h>
 #include "skip_list.h"
 
 SkipList::SkipList(int maxLevel, float skipListP):MAX_LEVEL(maxLevel),
@@ -146,4 +147,10 @@ bool SkipList<KeyType, DataType>::updateNode(KeyType key, DataType newValue)
     {
         return false;
     }
+}
+
+int SkipList::randomLevel()
+{
+    srand((unsigned int)time(NULL));
+    return  rand()%MAX_LEVEL;
 }
