@@ -4,10 +4,12 @@
 
 #include <c++/cstdlib>
 #include <algorithm>
+#include <iostream>
 #include <time.h>
 #include "skip_list.h"
 
-SkipList::SkipList(int maxLevel, float skipListP):MAX_LEVEL(maxLevel),
+template <class KeyType, class DataType>
+SkipList<KeyType, DataType>::SkipList(int maxLevel, float skipListP):MAX_LEVEL(maxLevel),
                                                   SKIP_LIST_P(skipListP)
 {
     level_num = 0;
@@ -15,10 +17,16 @@ SkipList::SkipList(int maxLevel, float skipListP):MAX_LEVEL(maxLevel),
     head.forwards.push_back(NULL);
 }
 
+
+void testlink()
+{
+    cout << "Fuck jet brains!" << endl;
+}
+
 template <class KeyType, class DataType>
 bool SkipList<KeyType, DataType>::searchNode(const KeyType & key, DataType & value)
 {
-    ListNode * x = &head;
+    ListNode<KeyType, DataType> * x = &head;
     for(int i = level_num; i >= 0; i--)
     {
         while (x->forwards[i] != NULL && x->forwards[i]->key < key)//这意味着KeyType类型必须有小于运算符“<”，若没有
@@ -42,8 +50,8 @@ bool SkipList<KeyType, DataType>::searchNode(const KeyType & key, DataType & val
 template <class KeyType, class DataType>
 bool SkipList<KeyType, DataType>::insertNode(const KeyType &key, const DataType &value)
 {
-    ListNode * x = &head;
-    vector<ListNode*> insertPos;
+    ListNode<KeyType, DataType> * x = &head;
+    vector<ListNode<KeyType, DataType>*> insertPos;
     for(int i = level_num; i >= 0; i--)
     {
         while (x->forwards[i] != NULL && x->forwards[i]->key < key)//这意味着KeyType类型必须有小于运算符“<”，若没有
@@ -59,7 +67,7 @@ bool SkipList<KeyType, DataType>::insertNode(const KeyType &key, const DataType 
         return false;
     }
 
-    ListNode * newNode = new ListNode(key, value);
+    ListNode<KeyType, DataType> * newNode = new ListNode<KeyType, DataType>(key, value);
     int nodeLevel = randomLevel();
     reverse(insertPos.begin(), insertPos.end());//这种方式不好，之后优化对比下
     if(nodeLevel > level_num && level_num < MAX_LEVEL)
@@ -79,10 +87,10 @@ bool SkipList<KeyType, DataType>::insertNode(const KeyType &key, const DataType 
 }
 
 template <class KeyType, class DataType>
-bool SkipList<KeyType, DataType>::deleteNode(KeyType key)
+bool SkipList<KeyType, DataType>::deleteNode(const KeyType & key)
 {
-    ListNode * x = &head;
-    vector<ListNode*> deletePos;
+    ListNode<KeyType, DataType> * x = &head;
+    vector<ListNode<KeyType, DataType>*> deletePos;
     for(int i = level_num; i >= 0; i--)
     {
         while (x->forwards[i] != NULL && x->forwards[i]->key < key)//这意味着KeyType类型必须有小于运算符“<”，若没有
@@ -126,9 +134,9 @@ bool SkipList<KeyType, DataType>::deleteNode(KeyType key)
 }
 
 template <class KeyType, class DataType>
-bool SkipList<KeyType, DataType>::updateNode(KeyType key, DataType newValue)
+bool SkipList<KeyType, DataType>::updateNode(const KeyType & key, const DataType & newValue)
 {
-    ListNode * x = &head;
+    ListNode<KeyType, DataType> * x = &head;
     for(int i = level_num; i >= 0; i--)
     {
         while (x->forwards[i] != NULL && x->forwards[i]->key < key)//这意味着KeyType类型必须有小于运算符“<”，若没有
@@ -149,8 +157,32 @@ bool SkipList<KeyType, DataType>::updateNode(KeyType key, DataType newValue)
     }
 }
 
-int SkipList::randomLevel()
+//按照预定的概率生成一个节点的随机层数
+template <class KeyType, class DataType>
+int SkipList<KeyType, DataType>::randomLevel()
 {
     srand((unsigned int)time(NULL));
-    return  rand()%MAX_LEVEL;
+    int level = 1;
+    while ((rand()&0xFFFF) < (SKIP_LIST_P * 0xFFFF))
+        level++;
+    return  (level > MAX_LEVEL ? MAX_LEVEL : level);
 }
+
+#if defined(DEBUG)
+//打印某一层跳跃链表的各个节点的值，仅用于调试
+template <class KeyType, class DataType>
+void SkipList<KeyType, DataType>::displayByLevel(int n)
+{
+    ListNode<KeyType, DataType> * p = head.forwards[n];
+    while (p != NULL)
+    {
+        cout << "Key:" << p->key << "Value" << p->value << "  ";
+        p = p->forwards[n];
+    }
+    cout << endl;
+}
+
+
+
+
+#endif
