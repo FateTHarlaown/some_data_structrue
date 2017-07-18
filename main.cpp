@@ -2,7 +2,8 @@
 
 int main()
 {
-    /*SkipList<int, int> SList;
+    srand((unsigned int)time(NULL));
+    SkipList<int, int> SList;
     SList.insertNode(1,2);
     SList.insertNode(2,2);
     SList.insertNode(3,2);
@@ -12,13 +13,14 @@ int main()
     {
         SList.displayByLevel(i);
     }
-    return 0;
-     */
-    SkipList<int, int> S;
-    for(int i = 0; i < 10; i++)
+    int ans;
+    if (SList.searchNode(100, ans))
     {
-        cout << S.randomLevel() << endl;
+        cout << "Find val for key 5:  " << ans << endl;
     }
+    else
+        cout << "fuck!!" << endl;
+    return 0;
 
 }
 

@@ -111,7 +111,7 @@ bool SkipList<KeyType, DataType>::insertNode(const KeyType &key, const DataType 
     ListNode<KeyType, DataType> * newNode = new ListNode<KeyType, DataType>(key, value);
     int nodeLevel = randomLevel();
     reverse(insertPos.begin(), insertPos.end());//这种方式不好，之后优化对比下
-    if(nodeLevel > level_num && level_num < MAX_LEVEL)
+    if(nodeLevel > level_num && level_num <= MAX_LEVEL)
     {
         nodeLevel = ++level_num;
         head.forwards.push_back(NULL);
@@ -202,8 +202,8 @@ bool SkipList<KeyType, DataType>::updateNode(const KeyType & key, const DataType
 template <class KeyType, class DataType>
 int SkipList<KeyType, DataType>::randomLevel()
 {
-    srand((unsigned int)time(NULL));
-    int level = 1;
+    //srand((unsigned int)time(NULL));
+    int level = 0;
     while ((rand()&0xFFFF) < (unsigned short)(SKIP_LIST_P * (float)0xFFFF))
         level++;
     return  (level > MAX_LEVEL ? MAX_LEVEL : level);
