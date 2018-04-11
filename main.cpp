@@ -1,7 +1,15 @@
-#include "skip_list/skip_list.h"
+#include "spin_lock/spin_lock_test.h"
+#include <string>
+#include <vector>
+#include <cassert>
 
 int main()
 {
+    spin_lock_test s_test;
+    s_test.test();
+    //assert(s_test.test());
+    return 0;
+    /*
     SkipList<int, int> SList;
     SList.insertNode(1,2);
     SList.insertNode(2,2);
@@ -41,6 +49,6 @@ int main()
         cout << "Oh no!" << endl;
 
     return 0;
-
+     */
 }
 

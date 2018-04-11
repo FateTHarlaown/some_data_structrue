@@ -40,12 +40,12 @@ public:
     bool updateNode(const KeyType & key, const DataType & newValue);
     bool deleteNode(const KeyType & key);
     int getLevel(){ return level_num;}
-    int randomLevel();
 #if defined(DEBUG)
     void displayByLevel(int n);
 #endif
 
 private:
+    int randomLevel();
     const int MAX_LEVEL;
     const float SKIP_LIST_P;
     int level_num;//从0开始编号
@@ -60,6 +60,7 @@ SkipList<KeyType, DataType>::SkipList(int maxLevel, float skipListP):MAX_LEVEL(m
 {
     level_num = 0;
 //无论如何至少有第0层，初始时第0层只有一个头结点
+    srand((unsigned int)time(NULL));
     head.forwards.push_back(NULL);
 }
 
@@ -147,7 +148,7 @@ bool SkipList<KeyType, DataType>::deleteNode(const KeyType & key)
     {
         for(int i = 0; i < x->forwards.size(); i++)
         {
-            deletePos[i]->forward[i] = x->forwards[i];
+            deletePos[i]->forwards[i] = x->forwards[i];
         }
         delete x;
 
