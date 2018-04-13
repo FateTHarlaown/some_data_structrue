@@ -9,15 +9,16 @@
 #include <functional>
 #include <thread>
 #include <atomic>
-#include "spin_lock.h"
+#include "SpinLock.h"
+#include "TestCase.h"
 
-class spin_lock_test
+class SpinLockTest : public TestCase
 {
 public:
-    spin_lock_test() : count(0)
+    SpinLockTest() : count(0)
     {}
 
-    bool test();
+    virtual bool test();
 
 private:
 
@@ -35,7 +36,7 @@ private:
     const int kWorkerNum = 10;
 
     volatile int count;
-    spin_lock spinLock;
+    SpinLock spinLock;
     std::vector<std::thread> workers;
 };
 

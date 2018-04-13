@@ -1,13 +1,14 @@
-#include "spin_lock/spin_lock_test.h"
 #include <string>
 #include <vector>
 #include <cassert>
+#include "MyTest.h"
 
 int main()
 {
-    spin_lock_test s_test;
-    s_test.test();
-    //assert(s_test.test());
+    MyTest test;
+    test.init();
+    test.runAllTestCases();
+    //assert(s_test.MyTest());
     return 0;
     /*
     SkipList<int, int> SList;

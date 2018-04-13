@@ -7,10 +7,10 @@
 
 #include <atomic>
 
-class spin_lock {
+class SpinLock {
 
 public:
-    spin_lock() : flag(false)
+    SpinLock() : flag(false)
     {}
 
     void lock()
