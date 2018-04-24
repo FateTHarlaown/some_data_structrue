@@ -15,7 +15,7 @@
 class SpinLockTest : public TestCase
 {
 public:
-    SpinLockTest() : count(0)
+    SpinLockTest() : count_(0)
     {}
 
     virtual bool test();
@@ -26,18 +26,18 @@ private:
     {
         for (int i = 0; i < kIncNum; ++i)
         {
-            spinLock.lock();
-            count++;
-            spinLock.unlock();
+            spinLock_.lock();
+            count_++;
+            spinLock_.unlock();
         }
     }
 
     const int kIncNum = 1000000;
     const int kWorkerNum = 10;
 
-    volatile int count;
-    SpinLock spinLock;
-    std::vector<std::thread> workers;
+    volatile int count_;
+    SpinLock spinLock_;
+    std::vector<std::thread> workers_;
 };
 
 

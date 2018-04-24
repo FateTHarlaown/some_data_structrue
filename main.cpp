@@ -1,6 +1,4 @@
-#include <string>
 #include <vector>
-#include <cassert>
 #include "MyTest.h"
 
 int main()

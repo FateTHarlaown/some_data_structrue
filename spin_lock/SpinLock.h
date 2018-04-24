@@ -10,13 +10,13 @@
 class SpinLock {
 
 public:
-    SpinLock() : flag(false)
+    SpinLock() : flag_(false)
     {}
 
     void lock()
     {
         bool expect = false;
-        while (!flag.compare_exchange_weak(expect, true))
+        while (!flag_.compare_exchange_weak(expect, true))
         {
             expect = false;
         }
@@ -24,11 +24,11 @@ public:
 
     void unlock()
     {
-        flag.store(false);
+        flag_.store(false);
     }
 
 private:
-    volatile std::atomic<bool> flag;
+    volatile std::atomic<bool> flag_;
 };
 
 #endif //SOME_DATA_STRUCTRUE_SPIN_LOCK_H
