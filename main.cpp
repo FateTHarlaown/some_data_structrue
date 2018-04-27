@@ -1,4 +1,5 @@
 #include <vector>
+#include <algorithm>
 #include "MyTest.h"
 
 int main()
@@ -6,8 +7,6 @@ int main()
     MyTest test;
     test.init();
     test.runAllTestCases();
-    //assert(s_test.MyTest());
-    return 0;
     /*
     SkipList<int, int> SList;
     SList.insertNode(1,2);

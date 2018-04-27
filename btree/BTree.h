@@ -8,8 +8,10 @@
 #include <vector>
 #include <algorithm>
 #include <climits>
+#include <memory>
+#include <cassert>
 
-#define DEFALUT_OU_DEGREE  1000
+#define DEFALUT_OUT_DEGREE  1000
 
 template <class Key>
 class BTreeKey
@@ -27,10 +29,14 @@ public:
 
     bool operator<(BTreeKey<Key> & rhs)
     {
+        if (isMinKey())
+            return false;
         return key_ < rhs.key_;
     }
     bool operator==(BTreeKey<Key> & rhs)
     {
+        if (isMinKey() && rhs.isMinKey())
+            return true;
         return key_ == rhs.key_;
     }
 
@@ -39,51 +45,110 @@ private:
     Key key_;
 };
 
-template <class BtreeKeyType, class BtreeValueType>
-class Node
+template <class KeyType>
+class BaseNode
 {
 public:
-    using Element = std::pair<BtreeKeyType, BtreeValueType>;
-    using Slots = std::vector<Element>;
-    using SlotsIter = Slots::iterator;
-
-    Node(bool isLeaf = false) : isLeaf_(isLeaf)
+    explicit BaseNode(bool isLeaf) : isLeaf_(isLeaf)
     {
 
     }
 
-    bool get(const BtreeKeyType & key, BtreeValueType & val)
+    bool isLeafNode()
     {
-        SlotsIter it = std::find_if(slots_.begin(), slots_.end(), [key](Element e)->bool { return key == e.first; });
+        return isLeaf_;
+    }
 
-        if (it == slots_.end())
-        {
+protected:
+    std::vector<KeyType> keys;
+    bool isLeaf_;
+};
+
+template <class KeyType, class ValueType>
+class Node : public BaseNode<KeyType>
+{
+public:
+    using NodeIter = std::shared_ptr<BaseNode>;
+    explicit Node(bool isLeaf) : BaseNode(isLeaf)
+    {
+
+    }
+
+    bool get(const KeyType & key, ValueType & val)
+    {
+        assert(keys_.size() == values_.size());
+        auto keyIter = std::find(keys_.begin(), keys_.end(), key);
+        auto valIter = keyToValue(keyIter);
+
+        if ( valIter == values_.end())
             return false;
-        }
 
-        val = it->second;
+        val = *valIter;
         return true;
     }
 
-    bool getRange(const BtreeKeyType & keyLow, const BtreeKeyType & keyHigh)
+    bool getRange(const KeyType & keyLow, const KeyType & keyHigh, std::vector<ValueType> & res)
     {
-        //TODO：finish it
+        if (keyHigh < keyLow)
+            return false;
+
+        auto keyIterLow = std::lower_bound(keys_.begin(), keys_.end(), keyLow);
+        auto valIterLow = keyToValue(keyIterLow);
+        if (valIterLow == values_.end())
+            return false;
+
+        auto keyIterHigh = std::upper_bound(keys_.begin(), keys_.end(), keyHigh);
+        auto valIterHigh = keyToValue(keyIterHigh);
+        res.clear();
+        std::copy(valIterLow, valIterHigh, res.begin());
+        return true;
     }
 
-    bool insert(const BtreeKeyType & key, const BtreeValueType & val)
+    void insert(const KeyType& key, const ValueType & val)
     {
-        //TODO:finish it
+        auto keyIter = std::upper_bound(keys_.begin(), keys_.end(), key);
+        keys_.insert(keyIter, key);
+        auto valIter = keyToValue(keyIter);
+        values_.insert(valIter, val);
     }
 
-    bool erase(const BtreeKeyType & key)
+    bool erase(const KeyType & key)
     {
-        //TODO:finish it
+        auto  keyIter = std::find(keys_.begin(), keys_.end(), key);
+        if (keyIter == keys_.end())
+            return false;
+
+        auto valIter = keyToValue(keyIter);
+        keys_.erase(keyIter);
+        values_.erase(valIter);
+        return true;
+    }
+
+    NodeIter Next()
+    {
+        return next_;
+    }
+
+    NodeIter prev()
+    {
+        return prev_;
     }
 
 private:
-    bool isLeaf_;
-    Slots slots_;
-};
+    std::vector<ValueType>::iterator keyToValue(std::vector<KeyType>::iterator keyIter)
+    {
+        assert(keys_.size() == values_.size());
+        if (keyIter == keys_.end())
+            return values_.end();
 
+        size_t pos = keyIter - keys_.begin();
+        return values_.begin() + pos;
+    }
+
+    std::vector<KeyType> keys_;
+    std::vector<ValueType> values_;
+    NodeIter prev_;
+    NodeIter next_;
+};
 
 #endif //SOME_DATA_STRUCTRUE_BTREE_H
