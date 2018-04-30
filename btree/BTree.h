@@ -17,7 +17,12 @@ template <class Key>
 class BTreeKey
 {
 public:
-    BTreeKey(Key key, bool isMinKey = false) : key_(key), isMinKey_(isMinKey)
+    explicit BTreeKey(Key key) : key_(key), isMinKey_(false)
+    {
+
+    }
+
+    explicit BTreeKey(bool isMinKey) : isMinKey_(isMinKey)
     {
 
     }
@@ -149,6 +154,45 @@ private:
     std::vector<ValueType> values_;
     NodeIter prev_;
     NodeIter next_;
+};
+
+template <class BTreeKeyType, class BTreeValueType>
+class Btree
+{
+public:
+    using NodeIter = std::shared_ptr<BaseNode>;
+    Btree() : root_(false)
+    {
+        //TODO:init root node
+    }
+
+    bool get(const BTreeKeyType & key, BTreeValueType & val)
+    {
+        //TODO:finish it
+    }
+
+    bool update(const BTreeKeyType & key, const BTreeValueType & val)
+    {
+        //TODO: finish it
+    }
+
+    void insert(const BTreeKeyType & key, const BTreeValueType & val)
+    {
+        //TODO:finish it
+    }
+
+    bool erase(const BTreeKeyType & key)
+    {
+        //TODO:finish it
+    }
+
+    bool getRange(const BTreeKeyType & keyLow, const BTreeKeyType & keyHigh, std::vector<BTreeValueType> & res)
+    {
+        //TODO:finish it
+    }
+
+private:
+    Node<BTreeKeyType, NodeIter> root_;
 };
 
 #endif //SOME_DATA_STRUCTRUE_BTREE_H
