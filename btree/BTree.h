@@ -70,7 +70,6 @@ public:
     }
 
 protected:
-    std::vector<KeyType> keys;
     bool isLeaf_;
 };
 
