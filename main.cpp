@@ -1,12 +1,22 @@
 #include <vector>
 #include <algorithm>
 #include "MyTest.h"
+#include "btree/BTree.h"
 
 int main()
 {
-    MyTest test;
-    test.init();
-    test.runAllTestCases();
+    //MyTest test;
+    //test.init();
+    //test.runAllTestCases();
+    //assert(s_test.MyTest());
+    Btree<int, int> tree;
+    tree.init();
+    assert(tree.isInited());
+    tree.insert(1, 2);
+    int ans;
+    bool ret = tree.get(1, ans);
+    assert(ret);
+    std::cout << ans << std::endl;
     /*
     SkipList<int, int> SList;
     SList.insertNode(1,2);
