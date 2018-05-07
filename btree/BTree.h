@@ -78,9 +78,16 @@ class Node : public BaseNode<KeyType>
 {
 public:
     using NodeIter = std::shared_ptr<BaseNode<KeyType>>;
+    using BranchIter = std::shared_ptr<Node<KeyType, NodeIter>>;
+
     explicit Node(bool isLeaf) : BaseNode<KeyType>(isLeaf)
     {
 
+    }
+
+    size_t size()
+    {
+        return keys_.size();
     }
 
     bool get(const KeyType & key, ValueType & val)
@@ -125,12 +132,17 @@ public:
         return true;
     }
 
-    void insert(const KeyType& key, const ValueType & val)
+    bool insert(const KeyType& key, const ValueType & val)
     {
+        //已存在这个key则返回错误，key必须唯一
+        if (std::find(keys_.begin(), keys_.end(), key) != keys_.end())
+            return false;
+
         auto keyIter = std::upper_bound(keys_.begin(), keys_.end(), key);
         auto valIter = keyToValue(keyIter);
         keys_.insert(keyIter, key);
         values_.insert(valIter, val);
+        return true;
     }
 
     bool erase(const KeyType & key)
@@ -145,14 +157,40 @@ public:
         return true;
     }
 
-    NodeIter Next()
+    void clear()
+    {
+        keys_.clear();
+        values_.clear();
+    }
+
+    NodeIter Next() const
     {
         return next_;
     }
 
-    NodeIter prev()
+    NodeIter prev() const
     {
         return prev_;
+    }
+
+    BranchIter parent() const
+    {
+        return parent_;
+    }
+
+    void setNext(const NodeIter & next)
+    {
+        next_ = next;
+    }
+
+    void setPrev(const NodeIter & prev)
+    {
+        prev_ = prev;
+    }
+
+    void setParent(const BranchIter & parent)
+    {
+        parent_ = parent;
     }
 
 private:
@@ -170,6 +208,7 @@ private:
     std::vector<ValueType> values_;
     NodeIter prev_;
     NodeIter next_;
+    BranchIter parent_;
 };
 
 template <class BTreeKeyType, class BTreeValueType>
@@ -191,8 +230,10 @@ public:
 
     void init()
     {
-        LeafIter child(new LeafNode(true));
-        root_.insert(Key(true), std::dynamic_pointer_cast<BNode>(child));
+        LeafIter child = std::make_shared<LeafNode>(true);
+        child->setParent(root_);
+        root_ = std::make_shared<BranchNode>(false);
+        root_->insert(Key(true), child);
     }
 
     bool isInited()
@@ -202,23 +243,12 @@ public:
 
     bool get(const BTreeKeyType & key, BTreeValueType & val)
     {
+        LeafIter leaf;
+        if (!getLeafNode(key, leaf))
+            return false;
+
         Key findKey(key);
-        NodeIter it;
-        bool ret = root_.searchPos(findKey, it);
-        assert(ret);//初始化后的根节点至少有一个min的子节点，不会为空
-
-        while (!it->isLeafNode())
-        {
-            BranchIter tmp = std::dynamic_pointer_cast<BranchNode>(it);
-            assert(tmp);
-            if (tmp->searchPos(findKey, it))
-                return false;
-        }
-
-        LeafIter leaf= std::dynamic_pointer_cast<LeafNode>(it);
-        assert(leaf);
-        ret = leaf->get(findKey, val);
-        return ret;
+        return leaf->get(findKey, val);
     }
 
     bool update(const BTreeKeyType & key, const BTreeValueType & val)
@@ -226,16 +256,22 @@ public:
         //TODO: finish it
     }
 
-    void insert(const BTreeKeyType & key, const BTreeValueType & val)
+    bool insert(const BTreeKeyType & key, const BTreeValueType & val)
     {
         //TODO:finish it
         //test
-        Key findKey(key);
-        NodeIter it;
-        bool flag = root_.searchPos(findKey, it);
-        assert(flag);
-        LeafIter leaf = std::dynamic_pointer_cast<LeafNode>(it);
-        leaf->insert(findKey, val);
+        LeafIter leaf;
+        if (getLeafNode(key, leaf))
+            return false;
+
+        Key insertKey(key);
+        leaf->insert(insertKey, val);
+        if (leaf->size() > DEFALUT_OUT_DEGREE)
+        {
+            LeafIter newLeaf = std::make_shared<LeafNode>(true);
+            newLeaf->setParent(leaf->parent());
+
+        }
     }
 
     bool erase(const BTreeKeyType & key)
@@ -249,8 +285,27 @@ public:
     }
 
 private:
+    bool getLeafNode(const BTreeKeyType & key, LeafIter & leaf)
+    {
+        Key findKey(key);
+        NodeIter it;
+        bool ret = root_->searchPos(findKey, it);
+        assert(ret);//初始化后至少有一个min的子节点，不会为空
+
+        while (!it->isLeafNode())
+        {
+            BranchIter tmp = std::dynamic_pointer_cast<BranchNode>(it);
+            assert(tmp);
+            if (tmp->searchPos(findKey, it))
+                return false;
+        }
+
+        leaf = std::dynamic_pointer_cast<LeafNode>(it);
+        return true;
+    }
+
     bool isInited_;
-    Node<Key, NodeIter> root_;
+    BranchIter root_;
 };
 
 #endif //SOME_DATA_STRUCTRUE_BTREE_H
