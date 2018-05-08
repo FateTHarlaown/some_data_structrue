@@ -10,6 +10,8 @@
 #include <climits>
 #include <memory>
 #include <cassert>
+#include "../../../../../../MinGW/lib/gcc/mingw32/4.8.1/include/c++/utility"
+#include "../../../../../../mingw64/lib/gcc/x86_64-w64-mingw32/7.1.0/include/c++/utility"
 
 #define DEFALUT_OUT_DEGREE  1000
 
@@ -73,12 +75,55 @@ protected:
     bool isLeaf_;
 };
 
+
+template <class KeyType, class ValueType>
+struct NodeIterator {
+    NodeIterator(std::vector<KeyType>::iterator keyIter,
+                 std::vector<ValueType>::iterator valIter) : key(keyIter), val(valIter)
+    {}
+
+    typename NodeIterator<KeyType, ValueType> operator++()
+    {
+        NodeIterator<KeyType, ValueType> ret(key, val);
+        key++;
+        val++;
+        return ret;
+    }
+
+    typename NodeIterator<KeyType, ValueType> operator--()
+    {
+        NodeIterator<KeyType, ValueType> ret(key, val);
+        key--;
+        val--;
+        return ret;
+    }
+
+    typename std::pair<KeyType, ValueType> operator*()
+    {
+        return std::pair<KeyType, ValueType>(*key, *val);
+    }
+
+    bool operator==(const NodeIterator<KeyType, ValueType> & rhs)
+    {
+        return (key == rhs.key) && (val == rhs.key);
+    }
+
+    bool operator!=(const NodeIterator<KeyType, ValueType> & rhs)
+    {
+        return (key != rhs.key) && (val != rhs.key);
+    }
+
+    std::vector<KeyType>::iterator key;
+    std::vector<ValueType>::iterator val;
+};
+
 template <class KeyType, class ValueType>
 class Node : public BaseNode<KeyType>
 {
 public:
     using NodeIter = std::shared_ptr<BaseNode<KeyType>>;
     using BranchIter = std::shared_ptr<Node<KeyType, NodeIter>>;
+    using iterator = NodeIterator<KeyType, ValueType>;
 
     explicit Node(bool isLeaf) : BaseNode<KeyType>(isLeaf)
     {
@@ -161,6 +206,9 @@ public:
     {
         keys_.clear();
         values_.clear();
+        parent_.reset();
+        next_.reset();
+        prev_.reset();
     }
 
     NodeIter Next() const
@@ -193,6 +241,16 @@ public:
         parent_ = parent;
     }
 
+    iterator begin()
+    {
+        return iterator(keys_.begin(), values_.begin());
+    }
+
+    iterator end()
+    {
+        return iterator(keys_.end(), values_.end());
+    }
+
 private:
     typename std::vector<ValueType>::iterator keyToValue(typename std::vector<KeyType>::iterator keyIter)
     {
@@ -210,6 +268,8 @@ private:
     NodeIter next_;
     BranchIter parent_;
 };
+
+
 
 template <class BTreeKeyType, class BTreeValueType>
 class Btree
@@ -269,9 +329,20 @@ public:
         if (leaf->size() > DEFALUT_OUT_DEGREE)
         {
             LeafIter newLeaf = std::make_shared<LeafNode>(true);
+            newLeaf->clear();
             newLeaf->setParent(leaf->parent());
 
+            LeafNode::iterator it = leaf->begin();
+            for (int i = 0; i < leaf->size()/2; i++)
+                ++it;
+            for ( ; it != leaf->end(); ++it)
+            {
+                newLeaf->insert((*it).first, (*it).second);
+                leaf->erase((*it).first);
+            }
         }
+
+
     }
 
     bool erase(const BTreeKeyType & key)
