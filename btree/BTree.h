@@ -11,7 +11,6 @@
 #include <memory>
 #include <cassert>
 #include "../../../../../../MinGW/lib/gcc/mingw32/4.8.1/include/c++/utility"
-#include "../../../../../../mingw64/lib/gcc/x86_64-w64-mingw32/7.1.0/include/c++/utility"
 
 #define DEFALUT_OUT_DEGREE  1000
 
@@ -211,7 +210,7 @@ public:
         prev_.reset();
     }
 
-    NodeIter Next() const
+    NodeIter next() const
     {
         return next_;
     }
@@ -290,9 +289,9 @@ public:
 
     void init()
     {
+        root_ = std::make_shared<BranchNode>(false);
         LeafIter child = std::make_shared<LeafNode>(true);
         child->setParent(root_);
-        root_ = std::make_shared<BranchNode>(false);
         root_->insert(Key(true), child);
     }
 
@@ -331,6 +330,11 @@ public:
             LeafIter newLeaf = std::make_shared<LeafNode>(true);
             newLeaf->clear();
             newLeaf->setParent(leaf->parent());
+            newLeaf->setNext(leaf->next());
+            newLeaf->setPrev(leaf);
+            leaf->setNext(newLeaf);
+            LeafIter nextLeaf = std::dynamic_pointer_cast<LeafNode>(newLeaf->next());
+            nextLeaf->setPrev(newLeaf);
 
             LeafNode::iterator it = leaf->begin();
             for (int i = 0; i < leaf->size()/2; i++)
@@ -340,9 +344,42 @@ public:
                 newLeaf->insert((*it).first, (*it).second);
                 leaf->erase((*it).first);
             }
+
+            BranchIter parent = leaf->parent();
+            auto firstKv = *newLeaf->begin();
+            parent->insert(firstKv.first, firstKv.second);
         }
 
+        BranchIter branch = leaf->parent();
+        while (branch != root_ && branch->size() > DEFALUT_OUT_DEGREE)
+        {
+            BranchIter newBranch = std::make_shared<BranchNode>(false);
+            newBranch->clear();
+            newBranch->setParent(branch->parent());
+            newBranch->setNext(branch->next());
+            newBranch->setPrev(branch);
+            branch->setNext(newBranch);
+            BranchIter nextBranch = std::dynamic_pointer_cast<BranchNode>(newBranch->next());
+            nextBranch->setPrev(newBranch);
 
+            BranchNode::iterator it = branch->begin();
+            for (int i = 0; i < branch->size()/2; ++i)
+                ++it;
+            for ( ; it != branch->end(); ++it)
+            {
+                newBranch->insert((*it).first, (*it).second);
+                branch->erase((*it).first);
+            }
+
+            branch = branch->parent();
+            auto firstKv = *newBranch->begin();
+            branch->insert(firstKv.first, firstKv.second)
+        }
+
+        if (branch == root_ && branch->size() == DEFALUT_OUT_DEGREE)
+        {
+            BranchIter newBranch
+        }
     }
 
     bool erase(const BTreeKeyType & key)
