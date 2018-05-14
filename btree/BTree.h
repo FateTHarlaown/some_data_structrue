@@ -77,11 +77,11 @@ protected:
 
 template <class KeyType, class ValueType>
 struct NodeIterator {
-    NodeIterator(std::vector<KeyType>::iterator keyIter,
-                 std::vector<ValueType>::iterator valIter) : key(keyIter), val(valIter)
+    NodeIterator(typename std::vector<KeyType>::iterator keyIter,
+                 typename std::vector<ValueType>::iterator valIter) : key(keyIter), val(valIter)
     {}
 
-    typename NodeIterator<KeyType, ValueType> operator++()
+    NodeIterator<KeyType, ValueType> operator++()
     {
         NodeIterator<KeyType, ValueType> ret(key, val);
         key++;
@@ -89,7 +89,7 @@ struct NodeIterator {
         return ret;
     }
 
-    typename NodeIterator<KeyType, ValueType> operator--()
+    NodeIterator<KeyType, ValueType> operator--()
     {
         NodeIterator<KeyType, ValueType> ret(key, val);
         key--;
@@ -104,16 +104,16 @@ struct NodeIterator {
 
     bool operator==(const NodeIterator<KeyType, ValueType> & rhs)
     {
-        return (key == rhs.key) && (val == rhs.key);
+        return (key == rhs.key) && (val == rhs.val);
     }
 
     bool operator!=(const NodeIterator<KeyType, ValueType> & rhs)
     {
-        return (key != rhs.key) && (val != rhs.key);
+        return (key != rhs.key) && (val != rhs.val);
     }
 
-    std::vector<KeyType>::iterator key;
-    std::vector<ValueType>::iterator val;
+    typename std::vector<KeyType>::iterator key;
+    typename std::vector<ValueType>::iterator val;
 };
 
 template <class KeyType, class ValueType>
@@ -282,9 +282,9 @@ public:
     using BranchIter = std::shared_ptr<Node<Key, NodeIter>>;
     using LeafIter = std::shared_ptr<Node<Key, BTreeValueType>>;
 
-    Btree() : root_(false)
+    Btree()
     {
-        assert(DEFALUT_OUT_DEGREE > 1);
+        assert(DEFALUT_OUT_DEGREE > 3);
     }
 
     void init()
@@ -293,6 +293,7 @@ public:
         LeafIter child = std::make_shared<LeafNode>(true);
         child->setParent(root_);
         root_->insert(Key(true), child);
+        isInited_ = true;
     }
 
     bool isInited()
@@ -320,7 +321,7 @@ public:
         //TODO:finish it
         //test
         LeafIter leaf;
-        if (getLeafNode(key, leaf))
+        if (!getLeafNode(key, leaf))
             return false;
 
         Key insertKey(key);
@@ -336,7 +337,7 @@ public:
             LeafIter nextLeaf = std::dynamic_pointer_cast<LeafNode>(newLeaf->next());
             nextLeaf->setPrev(newLeaf);
 
-            LeafNode::iterator it = leaf->begin();
+            typename LeafNode::iterator it = leaf->begin();
             for (int i = 0; i < leaf->size()/2; i++)
                 ++it;
             for ( ; it != leaf->end(); ++it)
@@ -347,7 +348,7 @@ public:
 
             BranchIter parent = leaf->parent();
             auto firstKv = *newLeaf->begin();
-            parent->insert(firstKv.first, firstKv.second);
+            parent->insert(firstKv.first, std::dynamic_pointer_cast<BNode>(newLeaf));
         }
 
         BranchIter branch = leaf->parent();
@@ -362,7 +363,7 @@ public:
             BranchIter nextBranch = std::dynamic_pointer_cast<BranchNode>(newBranch->next());
             nextBranch->setPrev(newBranch);
 
-            BranchNode::iterator it = branch->begin();
+            typename BranchNode::iterator it = branch->begin();
             for (int i = 0; i < branch->size()/2; ++i)
                 ++it;
             for ( ; it != branch->end(); ++it)
@@ -373,13 +374,38 @@ public:
 
             branch = branch->parent();
             auto firstKv = *newBranch->begin();
-            branch->insert(firstKv.first, firstKv.second)
+            branch->insert(firstKv.first, std::dynamic_pointer_cast<BNode>(newBranch));
         }
 
         if (branch == root_ && branch->size() == DEFALUT_OUT_DEGREE)
         {
-            BranchIter newBranch
+            BranchIter branch1 = std::make_shared<BranchNode>(false);
+            BranchIter branch2 = std::make_shared<BranchNode>(false);
+            branch1->clear();
+            branch2->clear();
+            branch1->setParent(root_);
+            branch2->setParent(root_);
+            branch1->setNext(std::dynamic_pointer_cast<BNode>(branch2));
+            branch2->setPrev(std::dynamic_pointer_cast<BNode>(branch1));
+
+            typename BranchNode::iterator it = root_->begin();
+            for (int i = 0; i < root_->size()/2; ++i)
+            {
+                branch1->insert((*it).first, (*it).second);
+                ++it;
+            }
+            for ( ; it != root_->end(); ++it)
+            {
+               branch2->insert((*it).first, (*it).second);
+            }
+            root_->clear();
+            Key minKey(true);
+            root_->insert(minKey, std::dynamic_pointer_cast<BNode>(branch1));
+            auto firstKv = *branch2->begin();
+            root_->insert(firstKv.first, std::dynamic_pointer_cast<BNode>(branch2));
         }
+
+        return true;
     }
 
     bool erase(const BTreeKeyType & key)
