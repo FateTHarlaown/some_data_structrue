@@ -201,6 +201,17 @@ public:
         return true;
     }
 
+    bool update(const KeyType & key, const ValueType & val)
+    {
+        auto keyIter = std::find(keys_.begin(), keys_.end(), key);
+        if (keyIter == keys_.end())
+            return false;
+
+        auto valIter = keyToValue(keyIter);
+        *valIter = val;
+        return true;
+    }
+
     void clear()
     {
         keys_.clear();
@@ -313,19 +324,23 @@ public:
 
     bool update(const BTreeKeyType & key, const BTreeValueType & val)
     {
-        //TODO: finish it
+        LeafIter leaf;
+        if (!getLeafNode(key, leaf))
+            return false;
+        Key updateKey(key);
+        return leaf->update(updateKey, val);
     }
 
     bool insert(const BTreeKeyType & key, const BTreeValueType & val)
     {
-        //TODO:finish it
-        //test
         LeafIter leaf;
         if (!getLeafNode(key, leaf))
             return false;
 
         Key insertKey(key);
-        leaf->insert(insertKey, val);
+        if (!leaf->insert(insertKey, val))
+            return false;
+
         if (leaf->size() > DEFALUT_OUT_DEGREE)
         {
             LeafIter newLeaf = std::make_shared<LeafNode>(true);
@@ -347,7 +362,14 @@ public:
             }
 
             BranchIter parent = leaf->parent();
-            auto firstKv = *newLeaf->begin();
+            auto firstKv = *leaf->begin();
+            if (insertKey < firstKv.first)
+            {
+                parent->erase(firstKv.first);
+                parent->insert(insertKey, std::dynamic_pointer_cast<BNode>(leaf));
+            }
+
+            firstKv = *newLeaf->begin();
             parent->insert(firstKv.first, std::dynamic_pointer_cast<BNode>(newLeaf));
         }
 
@@ -411,6 +433,44 @@ public:
     bool erase(const BTreeKeyType & key)
     {
         //TODO:finish it
+        LeafIter leaf;
+        if (!getLeafNode(key, leaf))
+            return false;
+
+        Key eraseKey(key);
+        if (!leaf->erase(eraseKey))
+            return false;
+
+        BranchIter parent = leaf->parent();
+        if (0 == leaf->size())
+        {
+            if (!parent->erase(eraseKey))
+            {
+                parent->erase(Key(true));
+                if (parent->size() > 0)
+                {
+                    auto kv = *(parent->begin());
+                    parent->erase(kv.first);
+                    parent->insert(Key(true), std::dynamic_pointer_cast<BNode>(leaf));
+                }
+            }
+
+            while (parent != root_ && parent->size() == 0)
+            {
+                BranchIter branch = parent;
+                parent = parent->parent();
+
+            }
+        }
+        else if (eraseKey < (*(leaf->begin())).first)
+        {
+            NodeIter tmp;
+            if (parent->get(eraseKey, tmp))
+            {
+                parent->erase(eraseKey);
+                parent->insert((*(leaf->begin())).first, std::dynamic_pointer_cast<NodeIter>(leaf));
+            }
+        }
     }
 
     bool getRange(const BTreeKeyType & keyLow, const BTreeKeyType & keyHigh, std::vector<BTreeValueType> & res)
