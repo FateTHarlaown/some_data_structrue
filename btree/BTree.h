@@ -463,7 +463,6 @@ public:
             {
                 BranchIter branch = parent;
                 parent = parent->parent();
-                if (parent->erase(eraseKey))
             }
         }
         else if (eraseKey < (*(leaf->begin())).first)
