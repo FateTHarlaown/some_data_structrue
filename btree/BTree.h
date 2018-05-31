@@ -451,7 +451,11 @@ public:
                 {
                     auto kv = *(parent->begin());
                     parent->erase(kv.first);
-                    parent->insert(Key(true), std::dynamic_pointer_cast<BNode>(leaf));
+                    parent->insert(Key(true), std::dynamic_pointer_cast<BNode>(kv.second));
+                }
+                else
+                {
+                    eraseKey = Key(true);
                 }
             }
 
@@ -459,7 +463,7 @@ public:
             {
                 BranchIter branch = parent;
                 parent = parent->parent();
-
+                if (parent->erase(eraseKey))
             }
         }
         else if (eraseKey < (*(leaf->begin())).first)
